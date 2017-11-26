@@ -1,0 +1,5 @@
+http://peerjs.com/docs/#start
+https://www.npmjs.com/package/node-rsa
+https://www.npmjs.com/package/sha
+
+API key: 2b9dfsp7dv5f80k9
