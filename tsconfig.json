@@ -6,6 +6,7 @@
   },
   "files": [
       "Message",
-      "MessageChain"
+      "MessageChain",
+      "MessageChainTests"
   ]
 }

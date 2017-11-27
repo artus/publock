@@ -7,7 +7,8 @@ const NodeRSA = require("node-rsa");
 */
 class MessageChain {
     constructor() {
-        this.genesis = JSON.parse('{"pseudonym":"Genesis","body":"This is the first message on the MessageChain.","date":"2017-11-25T12:00:00.000Z","reference":"","previousHash":"","publicKey":"-----BEGIN PUBLIC KEY-----\\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMS+fJ0hAKDQZH7SdWuR1Qr/Pxha2zfO\\nVfme3QLIiTWgZIK4NxY/XZrIWvVE/FE+8C8PajqqPUhkGTlcV4drQn8CAwEAAQ==\\n-----END PUBLIC KEY-----","encryptedHash":"uix+ieQpgDWOyJZABPM4nNquZvqLyAJqVbik4j4C/4iGqDOaI+vplu4X4hsjEPLzwmAudAwPW0VF3EN5VcN6bkkyGk+T4u4o639ku0no1hTiWKIjexaaglpVccIa6dgF7oBAQPRBNI8vGWs7UOkaHFpcetfTPpgZ9Hfqsjgjm0yuFnZ34YN5goBj5iR5fX/nDq2wmPHunXZ3sSLE/JaePO/zOMCj3dy8b04/r98XUpr7aMXJeKE/8bcck1mXIzgz","hash":"b15d3f419806cf820e96a36cf0162aa14d5465985a8e99fccd27e9e70c3d29f6"}');
+        this.genesisString = '{"pseudonym":"Genesis","body":"This is the first message on the MessageChain.","date":"2017-11-25T12:00:00.000Z","reference":"","previousHash":"","publicKey":"-----BEGIN PUBLIC KEY-----\\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMS+fJ0hAKDQZH7SdWuR1Qr/Pxha2zfO\\nVfme3QLIiTWgZIK4NxY/XZrIWvVE/FE+8C8PajqqPUhkGTlcV4drQn8CAwEAAQ==\\n-----END PUBLIC KEY-----","encryptedHash":"uix+ieQpgDWOyJZABPM4nNquZvqLyAJqVbik4j4C/4iGqDOaI+vplu4X4hsjEPLzwmAudAwPW0VF3EN5VcN6bkkyGk+T4u4o639ku0no1hTiWKIjexaaglpVccIa6dgF7oBAQPRBNI8vGWs7UOkaHFpcetfTPpgZ9Hfqsjgjm0yuFnZ34YN5goBj5iR5fX/nDq2wmPHunXZ3sSLE/JaePO/zOMCj3dy8b04/r98XUpr7aMXJeKE/8bcck1mXIzgz","hash":"b15d3f419806cf820e96a36cf0162aa14d5465985a8e99fccd27e9e70c3d29f6"}';
+        this.genesisHash = "b15d3f419806cf820e96a36cf0162aa14d5465985a8e99fccd27e9e70c3d29f6";
         this._messageMap = new Map();
         this._messageList = new Array();
         this.addGenesisBlock();
@@ -18,26 +19,8 @@ class MessageChain {
     get messageList() {
         return this._messageList;
     }
-    privateGenesisKey() {
-        let privateKey = "";
-        privateKey += '-----BEGIN RSA PRIVATE KEY-----\n';
-        privateKey += 'MIIBOQIBAAJBAMS+fJ0hAKDQZH7SdWuR1Qr/Pxha2zfOVfme3QLIiTWgZIK4NxY/\n';
-        privateKey += 'XZrIWvVE/FE+8C8PajqqPUhkGTlcV4drQn8CAwEAAQJARTrWNKBJTU0nH61E3i45\n';
-        privateKey += 'rh31AMfvvapgfG7XTERua6y/pZBtcD9LcOLCEr1eezCh+9beYWyoWsOgEBoElIZl\n';
-        privateKey += 'gQIhAOzWfMIupdgwlnNxdFGxcQw8veu0QNFmWesFTiOr+wBBAiEA1KmOW91NCezl\n';
-        privateKey += 'VIVoovsFFSbqnm/o39bZphuy8eDBkr8CIDKxxoqaCY24+LtFMay62oPQDKcDMkyg\n';
-        privateKey += 'J+cSf6NLELMBAiBfF6Zxi4ZcTtLJNZJxdl9ycuFskUwHc3IFZdNhdwf3zwIgdDY6\n';
-        privateKey += '4Mx/L/C54y5n25g3D5eZdG/1zLVMdkVhKZUREtY=\n';
-        privateKey += '-----END RSA PRIVATE KEY-----';
-        return privateKey;
-    }
-    get publicGenesisKey() {
-        let publicKey = "";
-        publicKey += '-----BEGIN PUBLIC KEY-----\n';
-        publicKey += 'MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMS+fJ0hAKDQZH7SdWuR1Qr/Pxha2zfO\n';
-        publicKey += 'Vfme3QLIiTWgZIK4NxY/XZrIWvVE/FE+8C8PajqqPUhkGTlcV4drQn8CAwEAAQ==\n';
-        publicKey += '-----END PUBLIC KEY-----';
-        return publicKey;
+    get lastMessage() {
+        return this.messageList[this.messageList.length - 1];
     }
     addGenesisBlock() {
         let message = new Message_1.Message("Genesis", "This is the first message on the MessageChain.", "2017-11-25T12:00:00.000Z", "", "", "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMS+fJ0hAKDQZH7SdWuR1Qr/Pxha2zfO\nVfme3QLIiTWgZIK4NxY/XZrIWvVE/FE+8C8PajqqPUhkGTlcV4drQn8CAwEAAQ==\n-----END PUBLIC KEY-----", "uix+ieQpgDWOyJZABPM4nNquZvqLyAJqVbik4j4C/4iGqDOaI+vplu4X4hsjEPLzwmAudAwPW0VF3EN5VcN6bkkyGk+T4u4o639ku0no1hTiWKIjexaaglpVccIa6dgF7oBAQPRBNI8vGWs7UOkaHFpcetfTPpgZ9Hfqsjgjm0yuFnZ34YN5goBj5iR5fX/nDq2wmPHunXZ3sSLE/JaePO/zOMCj3dy8b04/r98XUpr7aMXJeKE/8bcck1mXIzgz", "b15d3f419806cf820e96a36cf0162aa14d5465985a8e99fccd27e9e70c3d29f6");
@@ -45,14 +28,96 @@ class MessageChain {
         this._messageMap.set(message.hash, message);
     }
     addMessage(newMessage) {
+        this.isValidMessage(newMessage);
         this._messageMap.set(newMessage.hash, newMessage);
         this._messageList.push(newMessage);
     }
+    getPseudonymFirstOccurence(pseudonym) {
+        for (let message of this.messageList) {
+            if (message.pseudonym == pseudonym)
+                return message;
+        }
+    }
+    validateMessageChain() {
+        // Check if there are the same amount of messages in the messageList and the messageMap.
+        if (this.messageList.length != this.messageMap.size)
+            return false;
+        // Initialise the first message, check if it is the genesisBlock;
+        let previousMessage = this.messageList[0];
+        if (previousMessage.hash != this.genesisHash)
+            throw new Error("Genesis hash is not equal to original genesishash.");
+        if (previousMessage.generateHash() != this.genesisHash)
+            throw new Error("Genesis fields are not valid.");
+        for (let i = 1; i < this.messageList.length; i++) {
+            let currentMessage = this.messageList[i];
+            // Check if previousHash is correct
+            if (currentMessage.previousHash != previousMessage.hash)
+                throw new Error("Message with hash " + currentMessage.hash + " previousHash field is not correct.");
+            // Check if date is after previousMessage date
+            let currentDate = new Date(currentMessage.date);
+            let previousDate = new Date(previousMessage.date);
+            if (currentDate < previousDate)
+                throw new Error("Message with hash " + currentMessage.hash + " date field contains a date that is before the previousMessage date field.");
+            // Check if date is not in the future
+            if (new Date() < currentDate)
+                Error("Message with hash " + currentMessage.hash + " date field contains a date in the future.");
+            // If the message refers to another message, check if that message exists
+            if (currentMessage.reference != "") {
+                let referencedMessage = this.messageMap.get(currentMessage.reference);
+                if (typeof referencedMessage == 'undefined')
+                    throw new Error("Message with hash " + currentMessage.hash + " references an non existing Message.");
+            }
+            // If the pseudonym has been used in the past, check if the public key matches
+            let firstOccurence = this.getPseudonymFirstOccurence(currentMessage.pseudonym);
+            if (typeof firstOccurence != 'undefined') {
+                if (currentMessage.publicKey != firstOccurence.publicKey)
+                    throw new Error("Message with hash " + currentMessage.hash + " pseudonym has been used before with another public key.");
+            }
+            // Check if the encrypted hash is correct.
+            let key = new NodeRSA({ b: 512 });
+            key.importKey(currentMessage.publicKey, 'public');
+            let decryptedHash = key.decryptPublic(currentMessage.encryptedHash, 'utf8');
+            if (decryptedHash != currentMessage.innerHash)
+                throw new Error("Message with hash " + currentMessage.hash + " ecnryptedHash is not valid.");
+            // Check if the hash is correct
+            let calculatedHash = currentMessage.generateHash();
+            if (currentMessage.hash != calculatedHash)
+                throw new Error("Message with hash " + currentMessage.hash + " has an invalid hash.");
+            // Set the previousMessage to the currentMessage
+            previousMessage = currentMessage;
+        }
+        return true;
+    }
+    isValidMessage(message) {
+        // First, validate MessageChain
+        this.validateMessageChain();
+        // Check if the previousHash field is correct
+        if (message.previousHash != this.lastMessage.hash)
+            throw new Error("New message previousHash field does not reference the latest Message in the MessageChain.");
+        // Check if the date field is newer than the date of the most recent Message in the MessageChain.
+        let newDate = new Date(message.date);
+        let previousDate = new Date(this.lastMessage.date);
+        if (newDate < previousDate)
+            throw new Error("New Message date field contains date that is older than the date of the most recent Message in the MessageChain.");
+        // Check if the date field is older than the current Date
+        if (newDate > new Date())
+            throw new Error("New Message date field contains a date that is older than the curent date.");
+        // Check if the pseudonym has already been used before. If it does, check if the public keys compare.
+        let firstOccurence = this.getPseudonymFirstOccurence(message.pseudonym);
+        if (typeof firstOccurence != 'undefined') {
+            if (message.publicKey != firstOccurence.publicKey)
+                throw new Error("Pseudonym has already been used before with another public key.");
+        }
+        // Check if the encryptedHash field is correct
+        let key = new NodeRSA({ b: 512 });
+        key.importKey(message.publicKey, 'public');
+        let decryptedHash = key.decryptPublic(message.encryptedHash, 'utf8');
+        if (decryptedHash != message.innerHash)
+            throw new Error("New Message encryptedHash field contains an incorrect hash.");
+        // Check if the hash is correct
+        if (message.hash != message.generateHash())
+            throw new Error("New Message hash field contains incorrect hash.");
+        return true;
+    }
 }
 exports.MessageChain = MessageChain;
-let mc = new MessageChain();
-let genesis = mc.messageList[0];
-let key = new NodeRSA({ b: 512 });
-key.importKey(genesis.publicKey, 'public');
-console.log(genesis.innerHash);
-console.log(key.decryptPublic(genesis.encryptedHash, 'utf8'));

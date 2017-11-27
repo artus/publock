@@ -30,6 +30,11 @@ export class MessageChain
     {
         return this._messageList;
     }
+    
+    get lastMessage() : Message
+    {
+        return this.messageList[this.messageList.length -1];
+    }
 
     private addGenesisBlock()
     {
@@ -40,6 +45,7 @@ export class MessageChain
 
     public addMessage(newMessage : Message)
     {
+        this.isValidMessage(newMessage);
         this._messageMap.set(newMessage.hash, newMessage);
         this._messageList.push(newMessage);
     }
@@ -57,24 +63,37 @@ export class MessageChain
         // Check if there are the same amount of messages in the messageList and the messageMap.
         if (this.messageList.length != this.messageMap.size) return false;
         
+        
+        // Initialise the first message, check if it is the genesisBlock;
         let previousMessage = this.messageList[0];
+        
+        if (previousMessage.hash != this.genesisHash) throw new Error("Genesis hash is not equal to original genesishash.");
+        if (previousMessage.generateHash() != this.genesisHash) throw new Error("Genesis fields are not valid.");
         
         for (let i = 1; i < this.messageList.length; i++)
         {
             let currentMessage = this.messageList[i];
             
             // Check if previousHash is correct
-            if (currentMessage.previousHash != previousMessage.hash) return false;
+            if (currentMessage.previousHash != previousMessage.hash) throw new Error("Message with hash " + currentMessage.hash + " previousHash field is not correct.");
             
             
             // Check if date is after previousMessage date
             let currentDate = new Date(currentMessage.date);
             let previousDate = new Date(previousMessage.date);
             
-            if (currentDate < previousDate) return false;
+            if (currentDate < previousDate) throw new Error("Message with hash " + currentMessage.hash + " date field contains a date that is before the previousMessage date field.");
             
             // Check if date is not in the future
-            if (new Date() < currentDate) return false;
+            if (new Date() < currentDate) Error("Message with hash " + currentMessage.hash + " date field contains a date in the future.");
+            
+            
+            // If the message refers to another message, check if that message exists
+            if (currentMessage.reference != "")
+            {
+                let referencedMessage = this.messageMap.get(currentMessage.reference);
+                if (typeof referencedMessage == 'undefined') throw new Error("Message with hash " + currentMessage.hash + " references an non existing Message.");
+            }
             
             
             // If the pseudonym has been used in the past, check if the public key matches
@@ -82,7 +101,7 @@ export class MessageChain
             
             if (typeof firstOccurence != 'undefined')
             {
-                if (currentMessage.publicKey != firstOccurence.publicKey) return false;
+                if (currentMessage.publicKey != firstOccurence.publicKey) throw new Error("Message with hash " + currentMessage.hash + " pseudonym has been used before with another public key.");
             }
             
             // Check if the encrypted hash is correct.
@@ -90,18 +109,58 @@ export class MessageChain
             key.importKey(currentMessage.publicKey, 'public');
             let decryptedHash = key.decryptPublic(currentMessage.encryptedHash, 'utf8');
             
-            if (decryptedHash != currentMessage.innerHash) return false;
+            if (decryptedHash != currentMessage.innerHash) throw new Error("Message with hash " + currentMessage.hash + " ecnryptedHash is not valid.");
             
             
             // Check if the hash is correct
             let calculatedHash = currentMessage.generateHash();
-            if (currentMessage.hash != calculatedHash) return false;
-            
+            if (currentMessage.hash != calculatedHash) throw new Error("Message with hash " + currentMessage.hash + " has an invalid hash.");
             
             
             // Set the previousMessage to the currentMessage
             previousMessage = currentMessage;
         }
+        
+        return true;
+    }
+    
+    isValidMessage(message : Message) : boolean
+    {
+        // First, validate MessageChain
+        this.validateMessageChain();
+        
+        
+        // Check if the previousHash field is correct
+        if (message.previousHash != this.lastMessage.hash) throw new Error("New message previousHash field does not reference the latest Message in the MessageChain.");
+        
+        
+        // Check if the date field is newer than the date of the most recent Message in the MessageChain.
+        let newDate = new Date(message.date);
+        let previousDate = new Date(this.lastMessage.date);
+        if (newDate < previousDate) throw new Error("New Message date field contains date that is older than the date of the most recent Message in the MessageChain.");
+        
+        // Check if the date field is older than the current Date
+        if (newDate > new Date()) throw new Error("New Message date field contains a date that is older than the curent date.");
+        
+        
+        // Check if the pseudonym has already been used before. If it does, check if the public keys compare.
+        let firstOccurence = this.getPseudonymFirstOccurence(message.pseudonym);
+        if (typeof firstOccurence != 'undefined')
+        {
+            if (message.publicKey != firstOccurence.publicKey) throw new Error("Pseudonym has already been used before with another public key.");
+        }
+        
+        
+        // Check if the encryptedHash field is correct
+        let key = new NodeRSA({b: 512});
+        key.importKey(message.publicKey, 'public');
+        let decryptedHash = key.decryptPublic(message.encryptedHash, 'utf8');
+        
+        if (decryptedHash != message.innerHash) throw new Error("New Message encryptedHash field contains an incorrect hash.");
+        
+        
+        // Check if the hash is correct
+        if (message.hash != message.generateHash()) throw new Error("New Message hash field contains incorrect hash.");
         
         return true;
     }

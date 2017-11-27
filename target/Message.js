@@ -35,7 +35,7 @@ class Message {
         return SHA256(this.encryptedHashFields).toString();
     }
     get allFields() {
-        return this.pseudonym + this.body + this.date + this.reference + this.previousHash + this.publicKey + this.encryptedHash + this.hash;
+        return this.pseudonym + this.body + this.date + this.reference + this.previousHash + this.publicKey + this.encryptedHash;
     }
     generateEncryptedHash(privateKey) {
         let key = new NodeRSA({ b: 512 });

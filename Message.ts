@@ -51,7 +51,7 @@ export class Message
     
     get allFields() : string
     {
-        return this.pseudonym + this.body + this.date + this.reference + this.previousHash + this.publicKey + this.encryptedHash + this.hash;
+        return this.pseudonym + this.body + this.date + this.reference + this.previousHash + this.publicKey + this.encryptedHash;
     }
     
     generateEncryptedHash(privateKey : string)
