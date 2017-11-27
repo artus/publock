@@ -11,6 +11,7 @@ export class MessageChain
     private _messageList : Array<Message>;
     
     private genesisString = '{"pseudonym":"Genesis","body":"This is the first message on the MessageChain.","date":"2017-11-25T12:00:00.000Z","reference":"","previousHash":"","publicKey":"-----BEGIN PUBLIC KEY-----\\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMS+fJ0hAKDQZH7SdWuR1Qr/Pxha2zfO\\nVfme3QLIiTWgZIK4NxY/XZrIWvVE/FE+8C8PajqqPUhkGTlcV4drQn8CAwEAAQ==\\n-----END PUBLIC KEY-----","encryptedHash":"uix+ieQpgDWOyJZABPM4nNquZvqLyAJqVbik4j4C/4iGqDOaI+vplu4X4hsjEPLzwmAudAwPW0VF3EN5VcN6bkkyGk+T4u4o639ku0no1hTiWKIjexaaglpVccIa6dgF7oBAQPRBNI8vGWs7UOkaHFpcetfTPpgZ9Hfqsjgjm0yuFnZ34YN5goBj5iR5fX/nDq2wmPHunXZ3sSLE/JaePO/zOMCj3dy8b04/r98XUpr7aMXJeKE/8bcck1mXIzgz","hash":"b15d3f419806cf820e96a36cf0162aa14d5465985a8e99fccd27e9e70c3d29f6"}';
+    public readonly genesisHash = "b15d3f419806cf820e96a36cf0162aa14d5465985a8e99fccd27e9e70c3d29f6";
     
     constructor()
     {
@@ -41,5 +42,67 @@ export class MessageChain
     {
         this._messageMap.set(newMessage.hash, newMessage);
         this._messageList.push(newMessage);
+    }
+    
+    public getPseudonymFirstOccurence(pseudonym : string) : Message
+    {
+        for (let message of this.messageList)
+        {
+            if (message.pseudonym == pseudonym) return message;
+        }
+    }
+    
+    public validateMessageChain() : boolean
+    {
+        // Check if there are the same amount of messages in the messageList and the messageMap.
+        if (this.messageList.length != this.messageMap.size) return false;
+        
+        let previousMessage = this.messageList[0];
+        
+        for (let i = 1; i < this.messageList.length; i++)
+        {
+            let currentMessage = this.messageList[i];
+            
+            // Check if previousHash is correct
+            if (currentMessage.previousHash != previousMessage.hash) return false;
+            
+            
+            // Check if date is after previousMessage date
+            let currentDate = new Date(currentMessage.date);
+            let previousDate = new Date(previousMessage.date);
+            
+            if (currentDate < previousDate) return false;
+            
+            // Check if date is not in the future
+            if (new Date() < currentDate) return false;
+            
+            
+            // If the pseudonym has been used in the past, check if the public key matches
+            let firstOccurence = this.getPseudonymFirstOccurence(currentMessage.pseudonym);
+            
+            if (typeof firstOccurence != 'undefined')
+            {
+                if (currentMessage.publicKey != firstOccurence.publicKey) return false;
+            }
+            
+            // Check if the encrypted hash is correct.
+            let key = new NodeRSA({b: 512});
+            key.importKey(currentMessage.publicKey, 'public');
+            let decryptedHash = key.decryptPublic(currentMessage.encryptedHash, 'utf8');
+            
+            if (decryptedHash != currentMessage.innerHash) return false;
+            
+            
+            // Check if the hash is correct
+            let calculatedHash = currentMessage.generateHash();
+            if (currentMessage.hash != calculatedHash) return false;
+            
+            
+            
+            // Set the previousMessage to the currentMessage
+            previousMessage = currentMessage;
+        }
+        
+        return true;
     }
 }
