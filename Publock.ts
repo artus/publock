@@ -16,10 +16,11 @@ export class Publock
     public offer : string;
     public answer : string;
     
-    public idCounter : number = 0;
+    public logging : boolean;
     
-    constructor(messageChain : MessageChain = new MessageChain(), )
+    constructor(logging : boolean = true, messageChain : MessageChain = new MessageChain(), )
     {
+        this.logging = logging;
         this.messageChain = messageChain;
         this.connections = new Map<string, SimplePeer>();
         this.initialiseOfferingConnection();
@@ -40,7 +41,7 @@ export class Publock
     
     initialiseOfferingConnection()
     {
-        let newPeer = new SimplePeer({ initiator : true, wrtc: wrtc});
+        let newPeer = new SimplePeer({ initiator : true, wrtc: wrtc, trickle: false});
         
         newPeer.on('signal', data => {
             this.offer = JSON.stringify(data);
@@ -52,7 +53,7 @@ export class Publock
         });
         
         newPeer.on('data', data => {
-            this.dataReceived(this.connections.get(newPeer._id), data);
+            this.dataReceived(newPeer._id, data);
         });
         
         newPeer.on('error', error => {
@@ -61,11 +62,12 @@ export class Publock
         });
         
         this.offeringConnection = newPeer;
+        this.log("Offering connection initialised.");
     }
     
     initialiseAnsweringConnection()
     {
-        let newPeer = new SimplePeer({ wrtc: wrtc });
+        let newPeer = new SimplePeer({ wrtc: wrtc, trickle: false });
         
         newPeer.on('signal', data => {
             this.answer = JSON.stringify(data);
@@ -77,7 +79,7 @@ export class Publock
         });
         
         newPeer.on('data', data => {
-            this.dataReceived(this.connections.get(newPeer._id), data);
+            this.dataReceived(newPeer._id, data);
         });
         
         newPeer.on('error', error => {
@@ -86,16 +88,17 @@ export class Publock
         });
         
         this.answeringConnection = newPeer;
+        this.log("Answering connection initialised.");
     }
     
     answerConnection(offer : string)
     {
-        this.answeringConnection.signal(offer);
+        this.answeringConnection.signal(JSON.parse(offer));
     }
     
     connectToPeer(answer: string)
     {
-        this.offeringConnection.signal(answer);
+        this.offeringConnection.signal(JSON.parse(answer));
     }
         
     dataReceived(connectionId: string, data : string)
@@ -107,44 +110,9 @@ export class Publock
     {
         this.connections.get(connectionId).send(data);
     }
+    
+    log(message : string)
+    {
+        if (this.logging) console.log(message);
+    }
 }
-
-/*let p1 = new SimplePeer({ initiator: true, wrtc: wrtc});
-let p2 = new SimplePeer({ wrtc: wrtc });
-
-console.log("created peers.");
-
-p1.on('error', err => console.log('error', err));
-p2.on('error', err => console.log('error', err));
-
-console.log("errors bound.");
-
-p1.on('data', data => { 
-    console.log("p1 received:" + data);
-    p2.destroy();
-    p1.destroy();
-});
-p2.on('data', data => console.log("p2 received:" + data));
-
-console.log("data bound");
-
-
-p1.on('connect', () => console.log("P1 connected to something"));
-p2.on('connect', () => {
-    console.log("P2 connected to something");
-    p2.send("test");
-});
-
-console.log("connection bound");
-
-p1.on('signal', data => {
-    console.log("p1._id: " + p1._id);
-    p2.signal(data);
-});
-p2.on('signal', data => {
-    console.log("p2._id: " + p2._id);
-    p1.signal(data);
-})
-
-
-console.log("signal bound");*/
