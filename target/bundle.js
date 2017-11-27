@@ -30708,45 +30708,5 @@ class Publock {
     }
 }
 exports.Publock = Publock;
-let t = new Publock();
-/*let p1 = new SimplePeer({ initiator: true, wrtc: wrtc});
-let p2 = new SimplePeer({ wrtc: wrtc });
-
-console.log("created peers.");
-
-p1.on('error', err => console.log('error', err));
-p2.on('error', err => console.log('error', err));
-
-console.log("errors bound.");
-
-p1.on('data', data => {
-    console.log("p1 received:" + data);
-    p2.destroy();
-    p1.destroy();
-});
-p2.on('data', data => console.log("p2 received:" + data));
-
-console.log("data bound");
-
-
-p1.on('connect', () => console.log("P1 connected to something"));
-p2.on('connect', () => {
-    console.log("P2 connected to something");
-    p2.send("test");
-});
-
-console.log("connection bound");
-
-p1.on('signal', data => {
-    console.log("p1._id: " + p1._id);
-    p2.signal(data);
-});
-p2.on('signal', data => {
-    console.log("p2._id: " + p2._id);
-    p1.signal(data);
-})
-
-
-console.log("signal bound");*/ 
 
 },{"./MessageChain":209,"simple-peer":204,"wrtc":207}]},{},[210]);
