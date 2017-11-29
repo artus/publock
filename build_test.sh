@@ -8,7 +8,7 @@
 tsc
 
 # Bundle all with browserify for use in webpages.
-browserify target/Publock.js -o target/bundle.js
+browserify target/Publock.js -s publock_module -o target/bundle.js
 
 # run tests after compilation.
 node target/MessageChainTests

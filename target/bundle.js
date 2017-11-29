@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.publock_module = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var asn1 = exports;
 
 asn1.bignum = require('bn.js');
@@ -30653,7 +30653,7 @@ class Publock {
     }
     // Methods
     initialiseOfferingConnection() {
-        let newPeer = new SimplePeer({ initiator: true, wrtc: wrtc, trickle: false });
+        let newPeer = new SimplePeer({ initiator: true, wrtc: wrtc, config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }, trickle: false });
         newPeer.on('signal', data => {
             this.offer = JSON.stringify(data);
         });
@@ -30672,7 +30672,7 @@ class Publock {
         this.log("Offering connection initialised.");
     }
     initialiseAnsweringConnection() {
-        let newPeer = new SimplePeer({ wrtc: wrtc, trickle: false });
+        let newPeer = new SimplePeer({ wrtc: wrtc, config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }, trickle: false });
         newPeer.on('signal', data => {
             this.answer = JSON.stringify(data);
         });
@@ -30709,4 +30709,5 @@ class Publock {
 }
 exports.Publock = Publock;
 
-},{"./MessageChain":209,"simple-peer":204,"wrtc":207}]},{},[210]);
+},{"./MessageChain":209,"simple-peer":204,"wrtc":207}]},{},[210])(210)
+});

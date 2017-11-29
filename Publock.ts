@@ -41,7 +41,7 @@ export class Publock
     
     initialiseOfferingConnection()
     {
-        let newPeer = new SimplePeer({ initiator : true, wrtc: wrtc, trickle: false});
+        let newPeer = new SimplePeer({ initiator : true, wrtc: wrtc, config: { iceServers: [ { urls: 'stun:stun.l.google.com:19302' } ] }, trickle: false});
         
         newPeer.on('signal', data => {
             this.offer = JSON.stringify(data);
@@ -67,7 +67,7 @@ export class Publock
     
     initialiseAnsweringConnection()
     {
-        let newPeer = new SimplePeer({ wrtc: wrtc, trickle: false });
+        let newPeer = new SimplePeer({ wrtc: wrtc, config: { iceServers: [ { urls: 'stun:stun.l.google.com:19302' } ] }, trickle: false });
         
         newPeer.on('signal', data => {
             this.answer = JSON.stringify(data);
