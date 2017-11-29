@@ -111,6 +111,8 @@ export class Publock
         this.connections.get(connectionId).send(data);
     }
     
+    
+    
     log(message : string)
     {
         if (this.logging) console.log(message);
