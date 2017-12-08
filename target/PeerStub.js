@@ -1,79 +1,53 @@
-import { IPeer } from './IPeer';
-import { Event } from 'typescript.events';
-
-export class PeerStub extends Event implements IPeer
-{
-    id : string;
-    private static idCounter : number = 0;
-    
-    public otherPeer : PeerStub;
-    
-    constructor()
-    {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const typescript_events_1 = require("typescript.events");
+class PeerStub extends typescript_events_1.Event {
+    constructor() {
         super();
         this.id = (PeerStub.idCounter++).toString();
     }
-    
-    offerConnection(param : any) : PeerStub
-    {
+    offerConnection(param) {
         this.otherPeer = param;
         param.answerConnection(this);
         this.onConnected();
         return this;
     }
-    
-    answerConnection(otherPeer : PeerStub)
-    {
+    answerConnection(otherPeer) {
         this.otherPeer = otherPeer;
         this.onConnected();
     }
-    
-    onConnected() : string
-    {
+    onConnected() {
         this.emit('connected', this.otherPeer);
         return "connected with peer " + this.otherPeer.id;
     }
-    
-    onDisconnected() : string
-    {
+    onDisconnected() {
         this.emit('disconnected', this.otherPeer);
         return "disconnected from peer " + this.otherPeer.id;
     }
-    
-    sendData(data : string)
-    {
+    sendData(data) {
         this.onSendData(data);
         this.otherPeer.receiveData(data);
     }
-    
-    receiveData(data : string) : string
-    {
+    receiveData(data) {
         this.onReceivedData(data);
         return data;
     }
-    
-    onSendData(data : string) : string
-    {
+    onSendData(data) {
         this.emit('data-sent', data);
         return data;
     }
-    
-    onReceivedData(data : string) : string
-    {
+    onReceivedData(data) {
         this.emit('data-received', data);
         return data;
     }
-
-    onError(error : string) : string
-    {
+    onError(error) {
         this.emit('error', error);
         return error;
     }
-    
-    onSignal(signal : string) : string
-    {
+    onSignal(signal) {
         this.emit('signal', signal);
         return signal;
     }
-
 }
+PeerStub.idCounter = 0;
+exports.PeerStub = PeerStub;

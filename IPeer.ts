@@ -15,7 +15,7 @@ export interface IPeer
     onConnected(param : any) : any;
     onDisconnected(param : any) : any;
     
-    onSentData(param : any) : any;
+    onSendData(param : any) : any;
     onReceivedData(param : any) : any;
     
     onError(param : any) : any;

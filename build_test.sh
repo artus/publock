@@ -12,3 +12,4 @@ browserify target/Publock.js -s publock_module -o target/bundle.js
 
 # run tests after compilation.
 node target/MessageChainTests
+node target/PublockTests

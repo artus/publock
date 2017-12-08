@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const MessageChain_1 = require("./MessageChain");
-const SimplePeer = require("simple-peer");
-const wrtc = require("wrtc");
+const PeerStub_1 = require("./PeerStub");
 class Publock {
-    constructor(logging = true, messageChain = new MessageChain_1.MessageChain()) {
+    constructor(logging = false, messageChain = new MessageChain_1.MessageChain()) {
         this.logging = logging;
         this.messageChain = messageChain;
         this.connections = new Map();
@@ -19,56 +18,44 @@ class Publock {
     }
     // Methods
     initialiseOfferingConnection() {
-        let newPeer = new SimplePeer({ initiator: true, wrtc: wrtc, config: { iceServers: [{ urls: 'stun:numb.viagenie.ca', username: 'artusvranken@gmail.com', credential: 'publock' }, { urls: 'turn:numb.viagenie.ca', username: 'artusvranken@gmail.com', credential: 'publock' }] }, trickle: false });
-        newPeer.on('signal', data => {
-            this.offer = JSON.stringify(data);
+        let offeringPeer = new PeerStub_1.PeerStub();
+        offeringPeer.on('connected', (peer) => {
+            this.connections.set(offeringPeer.id, offeringPeer);
+            this.log("connected with peer " + peer.id);
         });
-        newPeer.on('connect', () => {
-            this.connections.set(newPeer._id, newPeer);
-            this.initialiseOfferingConnection();
+        offeringPeer.on('disconnected', (peer) => {
+            this.connections.delete(offeringPeer.id);
+            this.log("disconnected with peer " + peer.id);
         });
-        newPeer.on('data', data => {
-            this.dataReceived(newPeer._id, data);
-        });
-        newPeer.on('error', error => {
-            console.log(error);
-            newPeer.destroy();
-            this.initialiseOfferingConnection();
-        });
-        this.offeringConnection = newPeer;
-        this.log("Offering connection initialised.");
+        offeringPeer.on('data-received', (data) => this.dataReceived(offeringPeer.otherPeer.id, data));
+        offeringPeer.on('data-sent', (data) => this.log("sent data:" + data));
+        this.offeringConnection = offeringPeer;
     }
     initialiseAnsweringConnection() {
-        let newPeer = new SimplePeer({ wrtc: wrtc, config: { iceServers: [{ urls: 'stun:numb.viagenie.ca', username: 'artusvranken@gmail.com', credential: 'publock' }, { urls: 'turn:numb.viagenie.ca', username: 'artusvranken@gmail.com', credential: 'publock' }] }, trickle: false });
-        newPeer.on('signal', data => {
-            this.answer = JSON.stringify(data);
+        let answeringPeer = new PeerStub_1.PeerStub();
+        answeringPeer.on('connected', (peer) => {
+            this.connections.set(answeringPeer.id, answeringPeer);
+            this.log("connected with peer " + peer.id);
         });
-        newPeer.on('connect', () => {
-            this.connections.set(newPeer._id, newPeer);
-            this.initialiseAnsweringConnection();
+        answeringPeer.on('disconnected', (peer) => {
+            this.connections.delete(answeringPeer.id);
+            this.log("disconnected with peer " + peer.id);
         });
-        newPeer.on('data', data => {
-            this.dataReceived(newPeer._id, data);
-        });
-        newPeer.on('error', error => {
-            console.log(error);
-            newPeer.destroy();
-            this.initialiseAnsweringConnection();
-        });
-        this.answeringConnection = newPeer;
-        this.log("Answering connection initialised.");
+        answeringPeer.on('data-received', (data) => this.dataReceived(answeringPeer.otherPeer.id, data));
+        answeringPeer.on('data-sent', (data) => this.log("sent data:" + data));
+        this.answeringConnection = answeringPeer;
     }
     answerConnection(offer) {
-        this.answeringConnection.signal(JSON.parse(offer));
+        this.answeringConnection.answerConnection(offer);
     }
     connectToPeer(answer) {
-        this.offeringConnection.signal(JSON.parse(answer));
+        this.offeringConnection.offerConnection(answer);
     }
     dataReceived(connectionId, data) {
-        console.log(connectionId + " sent: " + data);
+        this.log(connectionId + ": " + data);
     }
     sendData(connectionId, data) {
-        this.connections.get(connectionId).send(data);
+        this.connections.get(connectionId).sendData(data);
     }
     log(message) {
         if (this.logging)

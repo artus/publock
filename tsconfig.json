@@ -9,6 +9,7 @@
       "MessageChain",
       "Publock",
       "MessageChainTests",
+      "PublockTests",
       "IPeer",
       "PeerStub"
   ]
