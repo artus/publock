@@ -1,46 +1,73 @@
 import { IPeer } from './IPeer';
+import { Event } from 'typescript.events';
 
-export class PeerStub implements IPeer
+export class PeerStub extends Event implements IPeer
 {
-    private _id : string;
+    id : string;
+    private static idCounter : number = 0;
     
-    get id() : string
+    private otherPeer : PeerStub;
+    
+    constructor()
     {
-        return this._id;
+        super();
+        this.id = (PeerStub.idCounter++).toString();
     }
     
-    set id(newId : string)
-    {
-        this._id = newId;
-    }
-    
-    offerConnection()
+    offerConnection(param : any) : PeerStub
     {
         return this;
     }
     
-    answerConnection(offer : string)
+    answerConnection(otherPeer : PeerStub)
     {
-        
+        this.otherPeer = otherPeer;
+        this.onConnected();
     }
     
-    sendData(peer : IPeer, data : string)
+    onConnected() : string
     {
-        
+        this.emit('connected');
+        return "connected with peer " + this.otherPeer.id;
     }
     
-    receiveData(peer : Ipeer, data : string)
-    
-    onSentData() : string
+    onDisconnected() : string
     {
-        // Do nothing
-        return "";
+        return "disconnected from peer " + this.otherPeer.id;
     }
     
-    onReceivedData() : string
+    sendData(data : string)
     {
-        return "";
+        this.otherPeer.receiveData(data);
+    }
+    
+    receiveData(data : string)
+    {
+        this.emit
+    }
+    
+    onSentData(data : string) : string
+    {
+        this.emit('send-data', data);
+        return data;
+    }
+    
+    onReceivedData(data : string) : string
+    {
+        this.emit('received-data', data);
+        return data;
     }
 
+    onError(error : string) : string
+    {
+        this.emit('error', error);
+        return error;
+    }
+    
+    onSignal(signal : string) : string
+    {
+        this.emit('signal', signal);
+        return signal;
+    }
 
 }

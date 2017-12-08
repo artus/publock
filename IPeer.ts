@@ -1,15 +1,23 @@
+import { Event } from 'typescript.events';
+
 export interface IPeer
 {
     id : string;
     
-    offerConnection(param : any) : string;
-    answerConnection(param : any) : string;
+    on(eventName : any, handler : any);
     
-    sendData(peer : IPeer, data : string) : string;
+    offerConnection(param : any) : any;
+    answerConnection(param : any) : any;
     
-    onSentData() : string;
-    onReceivedData() : string;
+    sendData(param : any) : any;
+    receiveData(param : any) : any;
     
-    onError() : string;
-    onSignal() : string;
+    onConnected(param : any) : any;
+    onDisconnected(param : any) : any;
+    
+    onSentData(param : any) : any;
+    onReceivedData(param : any) : any;
+    
+    onError(param : any) : any;
+    onSignal(param : any) : any;
 }
