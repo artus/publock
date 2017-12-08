@@ -2,8 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const typescript_events_1 = require("typescript.events");
 class PeerStub extends typescript_events_1.Event {
-    constructor() {
+    constructor(publockId) {
         super();
+        this.publockId = publockId;
         this.id = (PeerStub.idCounter++).toString();
     }
     offerConnection(param) {
@@ -25,12 +26,21 @@ class PeerStub extends typescript_events_1.Event {
         return "disconnected from peer " + this.otherPeer.id;
     }
     sendData(data) {
-        this.onSendData(data);
-        this.otherPeer.receiveData(data);
+        try {
+            this.onSendData(data);
+            this.otherPeer.receiveData(data);
+        }
+        catch (error) {
+            this.onDisconnected();
+        }
     }
     receiveData(data) {
         this.onReceivedData(data);
         return data;
+    }
+    disconnect(param) {
+        this.otherPeer.onDisconnected("");
+        return this.onDisconnected();
     }
     onSendData(data) {
         this.emit('data-sent', data);

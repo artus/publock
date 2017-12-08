@@ -6,11 +6,14 @@ export class PeerStub extends Event implements IPeer
     id : string;
     private static idCounter : number = 0;
     
-    public otherPeer : PeerStub;
+    publockId : string;
     
-    constructor()
+    public otherPeer : IPeer;
+    
+    constructor(publockId : string)
     {
         super();
+        this.publockId = publockId;
         this.id = (PeerStub.idCounter++).toString();
     }
     
@@ -42,14 +45,27 @@ export class PeerStub extends Event implements IPeer
     
     sendData(data : string)
     {
-        this.onSendData(data);
-        this.otherPeer.receiveData(data);
+        try
+        {
+            this.onSendData(data);
+            this.otherPeer.receiveData(data);
+        }
+        catch (error)
+        {
+            this.onDisconnected();
+        }
     }
     
     receiveData(data : string) : string
     {
         this.onReceivedData(data);
         return data;
+    }
+    
+    disconnect(param : any) : string
+    {
+        this.otherPeer.onDisconnected("");
+        return this.onDisconnected();
     }
     
     onSendData(data : string) : string

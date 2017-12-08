@@ -29287,10 +29287,22 @@ exports.MessageChain = MessageChain;
 },{"./Message":187,"node-rsa":169}],189:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+class PeerMessage {
+    constructor(command, data) {
+        this.command = command;
+        this.data = data;
+    }
+}
+exports.PeerMessage = PeerMessage;
+
+},{}],190:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const typescript_events_1 = require("typescript.events");
 class PeerStub extends typescript_events_1.Event {
-    constructor() {
+    constructor(publockId) {
         super();
+        this.publockId = publockId;
         this.id = (PeerStub.idCounter++).toString();
     }
     offerConnection(param) {
@@ -29312,12 +29324,21 @@ class PeerStub extends typescript_events_1.Event {
         return "disconnected from peer " + this.otherPeer.id;
     }
     sendData(data) {
-        this.onSendData(data);
-        this.otherPeer.receiveData(data);
+        try {
+            this.onSendData(data);
+            this.otherPeer.receiveData(data);
+        }
+        catch (error) {
+            this.onDisconnected();
+        }
     }
     receiveData(data) {
         this.onReceivedData(data);
         return data;
+    }
+    disconnect(param) {
+        this.otherPeer.onDisconnected("");
+        return this.onDisconnected();
     }
     onSendData(data) {
         this.emit('data-sent', data);
@@ -29339,13 +29360,16 @@ class PeerStub extends typescript_events_1.Event {
 PeerStub.idCounter = 0;
 exports.PeerStub = PeerStub;
 
-},{"typescript.events":186}],190:[function(require,module,exports){
+},{"typescript.events":186}],191:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const MessageChain_1 = require("./MessageChain");
 const PeerStub_1 = require("./PeerStub");
+const PeerMessage_1 = require("./PeerMessage");
 class Publock {
     constructor(logging = false, messageChain = new MessageChain_1.MessageChain()) {
+        this.messageChainLoaded = false;
+        this.id = (Publock.idCounter++).toString();
         this.logging = logging;
         this.messageChain = messageChain;
         this.connections = new Map();
@@ -29360,51 +29384,124 @@ class Publock {
     }
     // Methods
     initialiseOfferingConnection() {
-        let offeringPeer = new PeerStub_1.PeerStub();
+        let offeringPeer = new PeerStub_1.PeerStub(this.id);
         offeringPeer.on('connected', (peer) => {
             this.connections.set(offeringPeer.id, offeringPeer);
-            this.log("connected with peer " + peer.id);
+            this.log(this.id + ":" + offeringPeer.id + " connected to " + offeringPeer.otherPeer.publockId + ":" + offeringPeer.otherPeer.id);
+            let connectionId = offeringPeer.id;
+            this.initialiseOfferingConnection();
+            this.sendConnectionsToPeer(connectionId);
         });
         offeringPeer.on('disconnected', (peer) => {
             this.connections.delete(offeringPeer.id);
-            this.log("disconnected with peer " + peer.id);
+            this.log(this.id + " : " + offeringPeer.id + " disconnected from " + offeringPeer.otherPeer.publockId + " : " + offeringPeer.otherPeer.id);
         });
-        offeringPeer.on('data-received', (data) => this.dataReceived(offeringPeer.otherPeer.id, data));
-        offeringPeer.on('data-sent', (data) => this.log("sent data:" + data));
+        offeringPeer.on('data-received', (data) => this.dataReceived(offeringPeer.id, data));
+        offeringPeer.on('data-sent', (data) => { });
         this.offeringConnection = offeringPeer;
     }
     initialiseAnsweringConnection() {
-        let answeringPeer = new PeerStub_1.PeerStub();
+        let answeringPeer = new PeerStub_1.PeerStub(this.id);
         answeringPeer.on('connected', (peer) => {
             this.connections.set(answeringPeer.id, answeringPeer);
-            this.log("connected with peer " + peer.id);
+            this.log(this.id + ":" + answeringPeer.id + " connected to " + answeringPeer.otherPeer.publockId + ":" + answeringPeer.otherPeer.id);
+            let connectionId = answeringPeer.id;
+            this.initialiseAnsweringConnection();
+            this.sendConnectionsToPeer(connectionId);
         });
         answeringPeer.on('disconnected', (peer) => {
             this.connections.delete(answeringPeer.id);
-            this.log("disconnected with peer " + peer.id);
+            this.log(this.id + ":" + answeringPeer.id + " disconnected from " + answeringPeer.otherPeer.publockId + ":" + answeringPeer.id);
         });
-        answeringPeer.on('data-received', (data) => this.dataReceived(answeringPeer.otherPeer.id, data));
-        answeringPeer.on('data-sent', (data) => this.log("sent data:" + data));
+        answeringPeer.on('data-received', (data) => this.dataReceived(answeringPeer.id, data));
+        answeringPeer.on('data-sent', (data) => { });
         this.answeringConnection = answeringPeer;
     }
     answerConnection(offer) {
         this.answeringConnection.answerConnection(offer);
     }
     connectToPeer(answer) {
-        this.offeringConnection.offerConnection(answer);
+        if (!this.isConnectedToPublock(answer.publockId))
+            this.offeringConnection.offerConnection(answer);
     }
     dataReceived(connectionId, data) {
-        this.log(connectionId + ": " + data);
+        //this.log(connectionId + ": " + data);
+        this.messageParser(connectionId, data);
     }
-    sendData(connectionId, data) {
-        this.connections.get(connectionId).sendData(data);
+    disconnectPeer(connectionId) {
+        this.connections.get(connectionId).disconnect(undefined);
+    }
+    sendData(connectionId, message) {
+        this.connections.get(connectionId).sendData(message);
     }
     log(message) {
         if (this.logging)
             console.log(message);
     }
+    messageParser(connectionId, message) {
+        switch (message.command) {
+            case "connect-to-peer":
+                this.connectToPeer(message.data);
+                break;
+            case "load-my-messagechain":
+                this.loadMessageChainFromPeer(message.data);
+                break;
+            case "send-your-messagechain":
+                this.sendMessageChainToPeer(message.data);
+                break;
+            case "send-your-answering-connection":
+                this.sendAnsweringConnectionToMiddleMan(connectionId, message.data.forPeer, message.data.publockId);
+                break;
+            case "my-answering-connection":
+                this.sendAnsweringConnectionToPeer(message.data.forPeer, message.data.answer);
+                break;
+        }
+    }
+    getConnectionByPublockId(publockId) {
+        for (let connection of this.connections.values()) {
+            if (connection.otherPeer.publockId == publockId)
+                return connection.id;
+        }
+        return (-1).toString();
+    }
+    isConnectedToPublock(publockId) {
+        for (let connection of this.connections.values()) {
+            if (connection.otherPeer.publockId == publockId)
+                return true;
+        }
+        return false;
+    }
+    sendAnsweringConnectionToMiddleMan(connectionId, forId, publockId) {
+        if (!this.isConnectedToPublock(publockId)) {
+            let message = new PeerMessage_1.PeerMessage("my-answering-connection", { forPeer: forId, answer: this.answeringConnection });
+            this.sendData(connectionId, message);
+        }
+    }
+    sendAnsweringConnectionToPeer(connectionId, answer) {
+        let message = new PeerMessage_1.PeerMessage("connect-to-peer", answer);
+        this.sendData(connectionId, message);
+    }
+    sendConnectionsToPeer(connectionId) {
+        let otherPublockId = this.connections.get(connectionId).otherPeer.publockId;
+        for (let connection of this.connections.values()) {
+            if (connection.id != connectionId) {
+                let message = new PeerMessage_1.PeerMessage("send-your-answering-connection", { forPeer: connectionId, publockId: otherPublockId });
+                this.sendData(connection.id, message);
+            }
+        }
+    }
+    loadMessageChainFromPeer(messageChain) {
+        if (!this.messageChainLoaded)
+            this.messageChain = messageChain;
+        this.messageChainLoaded = true;
+    }
+    sendMessageChainToPeer(connectionId) {
+        let newPeerMessage = new PeerMessage_1.PeerMessage("load-my-messagechain", this.messageChain);
+        this.connections.get(connectionId).sendData(newPeerMessage);
+    }
 }
+Publock.idCounter = 0;
 exports.Publock = Publock;
 
-},{"./MessageChain":188,"./PeerStub":189}]},{},[190])(190)
+},{"./MessageChain":188,"./PeerMessage":189,"./PeerStub":190}]},{},[191])(191)
 });
