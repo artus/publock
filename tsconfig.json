@@ -8,6 +8,8 @@
       "Message",
       "MessageChain",
       "Publock",
-      "MessageChainTests"
+      "MessageChainTests",
+      "IPeer",
+      "PeerStub"
   ]
 }

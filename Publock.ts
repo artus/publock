@@ -41,7 +41,7 @@ export class Publock
     
     initialiseOfferingConnection()
     {
-        let newPeer = new SimplePeer({ initiator : true, wrtc: wrtc, config: { iceServers: [ { urls: 'stun:stun.l.google.com:19302' } ] }, trickle: false});
+        let newPeer = new SimplePeer({ initiator : true, wrtc: wrtc, config: { iceServers: [ { urls: 'stun:numb.viagenie.ca', username: 'artusvranken@gmail.com', credential: 'publock' }, { urls: 'turn:numb.viagenie.ca', username: 'artusvranken@gmail.com', credential: 'publock'} ] }, trickle: false});
         
         newPeer.on('signal', data => {
             this.offer = JSON.stringify(data);
@@ -59,6 +59,7 @@ export class Publock
         newPeer.on('error', error => {
             console.log(error);
             newPeer.destroy();
+            this.initialiseOfferingConnection();
         });
         
         this.offeringConnection = newPeer;
@@ -67,7 +68,7 @@ export class Publock
     
     initialiseAnsweringConnection()
     {
-        let newPeer = new SimplePeer({ wrtc: wrtc, config: { iceServers: [ { urls: 'stun:stun.l.google.com:19302' } ] }, trickle: false });
+        let newPeer = new SimplePeer({ wrtc: wrtc, config: { iceServers: [ { urls: 'stun:numb.viagenie.ca', username: 'artusvranken@gmail.com', credential: 'publock' }, { urls: 'turn:numb.viagenie.ca', username: 'artusvranken@gmail.com', credential: 'publock'} ] }, trickle: false});
         
         newPeer.on('signal', data => {
             this.answer = JSON.stringify(data);
@@ -85,6 +86,7 @@ export class Publock
         newPeer.on('error', error => {
             console.log(error);
             newPeer.destroy();
+            this.initialiseAnsweringConnection();
         });
         
         this.answeringConnection = newPeer;
