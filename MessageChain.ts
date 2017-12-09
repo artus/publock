@@ -35,6 +35,11 @@ export class MessageChain
     {
         return this.messageList[this.messageList.length -1];
     }
+    
+    get size() : number
+    {
+        return this.messageMap.size;
+    }
 
     private addGenesisBlock()
     {
@@ -179,12 +184,7 @@ export class MessageChain
             // Check if otherMessage isn't the genesis block
             if (otherMessage.hash != newMessageChain.genesisHash)
             {
-                // Stringify message
-                let objectString = JSON.stringify(otherMessage);
-                let copiedMessage = JSON.parse(objectString);
-            
-                let newMessage = new Message(copiedMessage.pseudonym, copiedMessage.body, copiedMessage.date, copiedMessage.reference, copiedMessage.previousHash, copiedMessage.publicKey, copiedMessage.encryptedHash, copiedMessage.hash);
-            
+                let newMessage = Message.copyMessage(otherMessage);
                 newMessageChain.addMessage(newMessage);
             }
         }

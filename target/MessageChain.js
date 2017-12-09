@@ -22,6 +22,9 @@ class MessageChain {
     get lastMessage() {
         return this.messageList[this.messageList.length - 1];
     }
+    get size() {
+        return this.messageMap.size;
+    }
     addGenesisBlock() {
         let message = new Message_1.Message("Genesis", "This is the first message on the MessageChain.", "2017-11-25T12:00:00.000Z", "", "", "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMS+fJ0hAKDQZH7SdWuR1Qr/Pxha2zfO\nVfme3QLIiTWgZIK4NxY/XZrIWvVE/FE+8C8PajqqPUhkGTlcV4drQn8CAwEAAQ==\n-----END PUBLIC KEY-----", "uix+ieQpgDWOyJZABPM4nNquZvqLyAJqVbik4j4C/4iGqDOaI+vplu4X4hsjEPLzwmAudAwPW0VF3EN5VcN6bkkyGk+T4u4o639ku0no1hTiWKIjexaaglpVccIa6dgF7oBAQPRBNI8vGWs7UOkaHFpcetfTPpgZ9Hfqsjgjm0yuFnZ34YN5goBj5iR5fX/nDq2wmPHunXZ3sSLE/JaePO/zOMCj3dy8b04/r98XUpr7aMXJeKE/8bcck1mXIzgz", "b15d3f419806cf820e96a36cf0162aa14d5465985a8e99fccd27e9e70c3d29f6");
         this._messageList.push(message);
@@ -127,10 +130,7 @@ class MessageChain {
         for (let otherMessage of otherMessageChain.messageList) {
             // Check if otherMessage isn't the genesis block
             if (otherMessage.hash != newMessageChain.genesisHash) {
-                // Stringify message
-                let objectString = JSON.stringify(otherMessage);
-                let copiedMessage = JSON.parse(objectString);
-                let newMessage = new Message_1.Message(copiedMessage.pseudonym, copiedMessage.body, copiedMessage.date, copiedMessage.reference, copiedMessage.previousHash, copiedMessage.publicKey, copiedMessage.encryptedHash, copiedMessage.hash);
+                let newMessage = Message_1.Message.copyMessage(otherMessage);
                 newMessageChain.addMessage(newMessage);
             }
         }
