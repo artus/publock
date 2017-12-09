@@ -1,16 +1,14 @@
 import { Message } from './Message';
 import { MessageChain } from './MessageChain';
 
-import { IPeer } from './IPeer';
-import { PeerStub } from './PeerStub';
-import { PeerMessage } from './PeerMessage';
-
 export class Publock
 {
     readonly id : string;
+    readonly version : string = "1";
+    
     public static idCounter = 0;
     
-    private _messageChain;
+    public messageChain;
     private messageChainLoaded = false;
     
     public connections : Map<string, Publock>;
@@ -25,21 +23,55 @@ export class Publock
         this.connections = new Map<string, Publock>();
     }
     
-    get messageChain() : MessageChain
-    {
-        return this._messageChain;
-    }
-    
-    set messageChain(newMessageChain : MessageChain)
-    {
-        this._messageChain = newMessageChain;
-    }
-    
     // Methods
     
-    joinPublock(publock : Publock)
+    joinPublockNetworkFrom(publock : Publock)
     {
-        // TODO
+        this.connectToPublock(publock);
+        this.loadMessageChainFromPublock(publock);
+    }
+    
+    connectToPublock(publock : Publock)
+    {
+        if (!this.isConnectedToPublock(publock.id)) 
+        {
+            this.connections.set(publock.id, publock);
+            publock.connections.set(this.id, this);
+        }
+        
+        for (let connection of publock.connections.values())
+        {
+            if (!this.isConnectedToPublock(connection.id)) this.connectToPublock(connection);
+        }
+    }
+    
+    disconnect()
+    {
+        for (let connection of this.connections.values())
+        {
+            connection.kickPublockFromNetwork(this);
+        }
+        
+        this.connections = new Map<string, Publock>();
+    }
+    
+    kickPublockFromNetwork(publock : Publock)
+    {
+        if (this.isConnectedToPublock(publock.id))
+        {
+            this.connections.delete(publock.id);
+            
+            for (let connection of this.connections.values())
+            {
+                connection.kickPublockFromNetwork(publock);
+            }
+        }
+    }
+    
+    loadMessageChainFromPublock(publock : Publock)
+    {
+        if (this.messageChainLoaded) throw new Error("Publock with id " + this.id + " already has loaded a MessageChain.");
+        this.messageChain = MessageChain.copyMessageChain(publock.messageChain);
     }
     
     log(message : string)

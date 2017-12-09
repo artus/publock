@@ -28934,155 +28934,6 @@ module.exports._ = {
 },{"_process":122,"crypto":58}],185:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var Dictionary = /** @class */ (function () {
-    function Dictionary() {
-        this.items = {};
-        this.count = 0;
-    }
-    Dictionary.prototype.Add = function (key, value) {
-        this.items[key] = value;
-        this.count++;
-    };
-    Dictionary.prototype.ContainsKey = function (key) {
-        return this.items.hasOwnProperty(key);
-    };
-    Dictionary.prototype.Count = function () {
-        return this.count;
-    };
-    Dictionary.prototype.Item = function (key) {
-        return this.items[key];
-    };
-    Dictionary.prototype.Keys = function () {
-        var Keys = [];
-        // tslint:disable-next-line:forin
-        for (var key in this.items) {
-            Keys.push(key);
-        }
-        return Keys;
-    };
-    Dictionary.prototype.Remove = function (key) {
-        var val = this.items[key];
-        delete this.items[key];
-        this.count--;
-        return val;
-    };
-    Dictionary.prototype.Values = function () {
-        var values = [];
-        // tslint:disable-next-line:forin
-        for (var key in this.items) {
-            values.push(this.items[key]);
-        }
-        return values;
-    };
-    return Dictionary;
-}());
-exports.Dictionary = Dictionary;
-
-},{}],186:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var dictionary_1 = require("./dictionary");
-var Event = /** @class */ (function () {
-    function Event() {
-        this._Events = new dictionary_1.Dictionary();
-        this._maxListeners = null;
-    }
-    Event.prototype.addListener = function (eventName, listener) {
-        return this.on(eventName, listener);
-    };
-    Event.prototype.on = function (eventName, listener) {
-        this._registerEvent(eventName, listener, false);
-        return this;
-    };
-    Event.prototype.once = function (eventName, listener) {
-        this._registerEvent(eventName, listener, true);
-        return this;
-    };
-    Event.prototype.emit = function (eventName) {
-        var args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            args[_i - 1] = arguments[_i];
-        }
-        var listeners = this._Events.Item(eventName);
-        var listenerCount = this.listenerCount(eventName);
-        if (listeners) {
-            listeners.map(function (listener) { return listener.apply(void 0, args); });
-        }
-        return listenerCount === 0 ? false : true;
-    };
-    Event.prototype.eventNames = function () {
-        return this._Events.Keys();
-    };
-    Event.prototype.getMaxListeners = function () {
-        return this._maxListeners === null ? Event.defaultMaxListeners : this._maxListeners;
-    };
-    Event.prototype.setMaxListeners = function (limit) {
-        this._maxListeners = limit;
-        return this;
-    };
-    Event.prototype.listeners = function (eventName) {
-        return this._Events.Item(eventName);
-    };
-    Event.prototype.listenerCount = function (eventName) {
-        var event = this._Events.Item(eventName);
-        return event === undefined ? 0 : event.length;
-    };
-    Event.prototype.removeAllListeners = function (eventNames) {
-        var _this = this;
-        if (!eventNames) {
-            eventNames = this._Events.Keys();
-        }
-        eventNames.forEach(function (eventName) { return _this._Events.Remove(eventName); });
-        return this;
-    };
-    Event.prototype.removeListener = function (eventName, listener) {
-        var listeners = this.listeners(eventName).filter(function (item) { return item === listener; });
-        this._Events.Add(eventName, listeners);
-        return this;
-    };
-    Event.prototype._registerEvent = function (eventName, listener, type) {
-        if (this._ListenerLimitReached(eventName)) {
-            console.log("Maximum listener reached, new Listener not added");
-            return;
-        }
-        if (type === true) {
-            listener = this._createOnceListener(listener, eventName);
-        }
-        var listeners = this._createListeners(listener, this.listeners(eventName));
-        this._Events.Add(eventName, listeners);
-        return;
-    };
-    Event.prototype._createListeners = function (listener, listeners) {
-        if (!listeners) {
-            listeners = new Array();
-        }
-        listeners.push(listener);
-        return listeners;
-    };
-    Event.prototype._createOnceListener = function (listener, eventName) {
-        var _this = this;
-        var newListener = function () {
-            var args = [];
-            for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i] = arguments[_i];
-            }
-            _this.removeListener(eventName, listener);
-            return listener.apply(void 0, args);
-        };
-        return newListener;
-    };
-    Event.prototype._ListenerLimitReached = function (eventName) {
-        return this.listenerCount(eventName) === this.getMaxListeners() ? true : false;
-    };
-    Event.defaultMaxListeners = 10;
-    return Event;
-}());
-exports.Event = Event;
-exports.default = Event;
-
-},{"./dictionary":185}],187:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const NodeRSA = require("node-rsa");
 const SHA256 = require("crypto-js/sha256");
 /**
@@ -29159,7 +29010,7 @@ class Message {
 }
 exports.Message = Message;
 
-},{"crypto-js/sha256":168,"node-rsa":169}],188:[function(require,module,exports){
+},{"crypto-js/sha256":168,"node-rsa":169}],186:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Message_1 = require("./Message");
@@ -29188,6 +29039,9 @@ class MessageChain {
         let message = new Message_1.Message("Genesis", "This is the first message on the MessageChain.", "2017-11-25T12:00:00.000Z", "", "", "-----BEGIN PUBLIC KEY-----\nMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMS+fJ0hAKDQZH7SdWuR1Qr/Pxha2zfO\nVfme3QLIiTWgZIK4NxY/XZrIWvVE/FE+8C8PajqqPUhkGTlcV4drQn8CAwEAAQ==\n-----END PUBLIC KEY-----", "uix+ieQpgDWOyJZABPM4nNquZvqLyAJqVbik4j4C/4iGqDOaI+vplu4X4hsjEPLzwmAudAwPW0VF3EN5VcN6bkkyGk+T4u4o639ku0no1hTiWKIjexaaglpVccIa6dgF7oBAQPRBNI8vGWs7UOkaHFpcetfTPpgZ9Hfqsjgjm0yuFnZ34YN5goBj5iR5fX/nDq2wmPHunXZ3sSLE/JaePO/zOMCj3dy8b04/r98XUpr7aMXJeKE/8bcck1mXIzgz", "b15d3f419806cf820e96a36cf0162aa14d5465985a8e99fccd27e9e70c3d29f6");
         this._messageList.push(message);
         this._messageMap.set(message.hash, message);
+    }
+    containsMessageWithHash(hash) {
+        return typeof this.messageMap.get(hash) != 'undefined';
     }
     addMessage(newMessage) {
         this.isValidMessage(newMessage);
@@ -29281,227 +29135,84 @@ class MessageChain {
             throw new Error("New Message hash field contains incorrect hash.");
         return true;
     }
+    static copyMessageChain(otherMessageChain) {
+        let newMessageChain = new MessageChain();
+        for (let otherMessage of otherMessageChain.messageList) {
+            // Check if otherMessage isn't the genesis block
+            if (otherMessage.hash != newMessageChain.genesisHash) {
+                // Stringify message
+                let objectString = JSON.stringify(otherMessage);
+                let copiedMessage = JSON.parse(objectString);
+                let newMessage = new Message_1.Message(copiedMessage.pseudonym, copiedMessage.body, copiedMessage.date, copiedMessage.reference, copiedMessage.previousHash, copiedMessage.publicKey, copiedMessage.encryptedHash, copiedMessage.hash);
+                newMessageChain.addMessage(newMessage);
+            }
+        }
+        return newMessageChain;
+    }
 }
 exports.MessageChain = MessageChain;
 
-},{"./Message":187,"node-rsa":169}],189:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-class PeerMessage {
-    constructor(command, data) {
-        this.command = command;
-        this.data = data;
-    }
-}
-exports.PeerMessage = PeerMessage;
-
-},{}],190:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const typescript_events_1 = require("typescript.events");
-class PeerStub extends typescript_events_1.Event {
-    constructor(publockId) {
-        super();
-        this.publockId = publockId;
-        this.id = (PeerStub.idCounter++).toString();
-    }
-    offerConnection(param) {
-        this.otherPeer = param;
-        param.answerConnection(this);
-        this.onConnected();
-        return this;
-    }
-    answerConnection(otherPeer) {
-        this.otherPeer = otherPeer;
-        this.onConnected();
-    }
-    onConnected() {
-        this.emit('connected', this.otherPeer);
-        return "connected with peer " + this.otherPeer.id;
-    }
-    onDisconnected() {
-        this.emit('disconnected', this.otherPeer);
-        return "disconnected from peer " + this.otherPeer.id;
-    }
-    sendData(data) {
-        try {
-            this.onSendData(data);
-            this.otherPeer.receiveData(data);
-        }
-        catch (error) {
-            this.onDisconnected();
-        }
-    }
-    receiveData(data) {
-        this.onReceivedData(data);
-        return data;
-    }
-    disconnect(param) {
-        this.otherPeer.onDisconnected("");
-        return this.onDisconnected();
-    }
-    onSendData(data) {
-        this.emit('data-sent', data);
-        return data;
-    }
-    onReceivedData(data) {
-        this.emit('data-received', data);
-        return data;
-    }
-    onError(error) {
-        this.emit('error', error);
-        return error;
-    }
-    onSignal(signal) {
-        this.emit('signal', signal);
-        return signal;
-    }
-}
-PeerStub.idCounter = 0;
-exports.PeerStub = PeerStub;
-
-},{"typescript.events":186}],191:[function(require,module,exports){
+},{"./Message":185,"node-rsa":169}],187:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const MessageChain_1 = require("./MessageChain");
-const PeerStub_1 = require("./PeerStub");
-const PeerMessage_1 = require("./PeerMessage");
 class Publock {
     constructor(logging = false, messageChain = new MessageChain_1.MessageChain()) {
+        this.version = "1";
         this.messageChainLoaded = false;
         this.id = (Publock.idCounter++).toString();
         this.logging = logging;
         this.messageChain = messageChain;
         this.connections = new Map();
-        this.initialiseOfferingConnection();
-        this.initialiseAnsweringConnection();
-    }
-    get messageChain() {
-        return this._messageChain;
-    }
-    set messageChain(newMessageChain) {
-        this._messageChain = newMessageChain;
     }
     // Methods
-    initialiseOfferingConnection() {
-        let offeringPeer = new PeerStub_1.PeerStub(this.id);
-        offeringPeer.on('connected', (peer) => {
-            this.connections.set(offeringPeer.id, offeringPeer);
-            this.log(this.id + ":" + offeringPeer.id + " connected to " + offeringPeer.otherPeer.publockId + ":" + offeringPeer.otherPeer.id);
-            let connectionId = offeringPeer.id;
-            this.initialiseOfferingConnection();
-            this.sendConnectionsToPeer(connectionId);
-        });
-        offeringPeer.on('disconnected', (peer) => {
-            this.connections.delete(offeringPeer.id);
-            this.log(this.id + " : " + offeringPeer.id + " disconnected from " + offeringPeer.otherPeer.publockId + " : " + offeringPeer.otherPeer.id);
-        });
-        offeringPeer.on('data-received', (data) => this.dataReceived(offeringPeer.id, data));
-        offeringPeer.on('data-sent', (data) => { });
-        this.offeringConnection = offeringPeer;
+    joinPublockNetworkFrom(publock) {
+        this.connectToPublock(publock);
+        this.loadMessageChainFromPublock(publock);
     }
-    initialiseAnsweringConnection() {
-        let answeringPeer = new PeerStub_1.PeerStub(this.id);
-        answeringPeer.on('connected', (peer) => {
-            this.connections.set(answeringPeer.id, answeringPeer);
-            this.log(this.id + ":" + answeringPeer.id + " connected to " + answeringPeer.otherPeer.publockId + ":" + answeringPeer.otherPeer.id);
-            let connectionId = answeringPeer.id;
-            this.initialiseAnsweringConnection();
-            this.sendConnectionsToPeer(connectionId);
-        });
-        answeringPeer.on('disconnected', (peer) => {
-            this.connections.delete(answeringPeer.id);
-            this.log(this.id + ":" + answeringPeer.id + " disconnected from " + answeringPeer.otherPeer.publockId + ":" + answeringPeer.id);
-        });
-        answeringPeer.on('data-received', (data) => this.dataReceived(answeringPeer.id, data));
-        answeringPeer.on('data-sent', (data) => { });
-        this.answeringConnection = answeringPeer;
+    connectToPublock(publock) {
+        if (!this.isConnectedToPublock(publock.id)) {
+            this.connections.set(publock.id, publock);
+            publock.connections.set(this.id, this);
+        }
+        for (let connection of publock.connections.values()) {
+            if (!this.isConnectedToPublock(connection.id))
+                this.connectToPublock(connection);
+        }
     }
-    answerConnection(offer) {
-        this.answeringConnection.answerConnection(offer);
+    disconnect() {
+        for (let connection of this.connections.values()) {
+            connection.kickPublockFromNetwork(this);
+        }
+        this.connections = new Map();
     }
-    connectToPeer(answer) {
-        if (!this.isConnectedToPublock(answer.publockId))
-            this.offeringConnection.offerConnection(answer);
+    kickPublockFromNetwork(publock) {
+        if (this.isConnectedToPublock(publock.id)) {
+            this.connections.delete(publock.id);
+            for (let connection of this.connections.values()) {
+                connection.kickPublockFromNetwork(publock);
+            }
+        }
     }
-    dataReceived(connectionId, data) {
-        //this.log(connectionId + ": " + data);
-        this.messageParser(connectionId, data);
-    }
-    disconnectPeer(connectionId) {
-        this.connections.get(connectionId).disconnect(undefined);
-    }
-    sendData(connectionId, message) {
-        this.connections.get(connectionId).sendData(message);
+    loadMessageChainFromPublock(publock) {
+        if (this.messageChainLoaded)
+            throw new Error("Publock with id " + this.id + " already has loaded a MessageChain.");
+        this.messageChain = MessageChain_1.MessageChain.copyMessageChain(publock.messageChain);
     }
     log(message) {
         if (this.logging)
             console.log(message);
     }
-    messageParser(connectionId, message) {
-        switch (message.command) {
-            case "connect-to-peer":
-                this.connectToPeer(message.data);
-                break;
-            case "load-my-messagechain":
-                this.loadMessageChainFromPeer(message.data);
-                break;
-            case "send-your-messagechain":
-                this.sendMessageChainToPeer(message.data);
-                break;
-            case "send-your-answering-connection":
-                this.sendAnsweringConnectionToMiddleMan(connectionId, message.data.forPeer, message.data.publockId);
-                break;
-            case "my-answering-connection":
-                this.sendAnsweringConnectionToPeer(message.data.forPeer, message.data.answer);
-                break;
-        }
-    }
-    getConnectionByPublockId(publockId) {
-        for (let connection of this.connections.values()) {
-            if (connection.otherPeer.publockId == publockId)
-                return connection.id;
-        }
-        return (-1).toString();
-    }
     isConnectedToPublock(publockId) {
         for (let connection of this.connections.values()) {
-            if (connection.otherPeer.publockId == publockId)
+            if (this.id == publockId || connection.id == publockId)
                 return true;
         }
         return false;
-    }
-    sendAnsweringConnectionToMiddleMan(connectionId, forId, publockId) {
-        if (!this.isConnectedToPublock(publockId)) {
-            let message = new PeerMessage_1.PeerMessage("my-answering-connection", { forPeer: forId, answer: this.answeringConnection });
-            this.sendData(connectionId, message);
-        }
-    }
-    sendAnsweringConnectionToPeer(connectionId, answer) {
-        let message = new PeerMessage_1.PeerMessage("connect-to-peer", answer);
-        this.sendData(connectionId, message);
-    }
-    sendConnectionsToPeer(connectionId) {
-        let otherPublockId = this.connections.get(connectionId).otherPeer.publockId;
-        for (let connection of this.connections.values()) {
-            if (connection.id != connectionId) {
-                let message = new PeerMessage_1.PeerMessage("send-your-answering-connection", { forPeer: connectionId, publockId: otherPublockId });
-                this.sendData(connection.id, message);
-            }
-        }
-    }
-    loadMessageChainFromPeer(messageChain) {
-        if (!this.messageChainLoaded)
-            this.messageChain = messageChain;
-        this.messageChainLoaded = true;
-    }
-    sendMessageChainToPeer(connectionId) {
-        let newPeerMessage = new PeerMessage_1.PeerMessage("load-my-messagechain", this.messageChain);
-        this.connections.get(connectionId).sendData(newPeerMessage);
     }
 }
 Publock.idCounter = 0;
 exports.Publock = Publock;
 
-},{"./MessageChain":188,"./PeerMessage":189,"./PeerStub":190}]},{},[191])(191)
+},{"./MessageChain":186}]},{},[187])(187)
 });

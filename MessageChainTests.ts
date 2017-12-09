@@ -193,3 +193,37 @@ function editing_message_in_MessageChain_invalidates_MessageChain()
     functionalityWorks("Editing message in MessageChain invalidates MessageChain.", throwsError);
 }
 editing_message_in_MessageChain_invalidates_MessageChain();
+
+
+function copying_MessageChain_results_in_exact_copy()
+{
+    let mc1 = new MessageChain();
+    let key = new NodeRSA({b: 512});
+    
+    let mc2 = MessageChain.copyMessageChain(mc1);
+    
+    // Check if they are the same and there fields don't get copied by reference but by value
+    let firstResult = JSON.stringify(mc1) === JSON.stringify(mc2);
+    mc2.messageList[0].pseudonym = "edited";
+    let secondResult = JSON.stringify(mc2) !== JSON.stringify(mc1);
+    
+    // Add a new message 
+    let message = new Message("John", "This is my first message.", new Date().toISOString(), "", mc1.lastMessage.hash, key.exportKey('public'));
+    message.encryptedHash = message.generateEncryptedHash(key.exportKey('private'));
+    message.hash = message.generateHash();
+    
+    let messageHash = message.hash;
+    
+    mc1.addMessage(message);
+    mc2 = MessageChain.copyMessageChain(mc1);
+    
+    let thirdResult = JSON.stringify(mc1) === JSON.stringify(mc2);
+    mc2.messageMap.get(messageHash).body = "edited";
+    let fourthResult = JSON.stringify(mc1) !== JSON.stringify(mc2);
+    
+    // concat booleans
+    let result = firstResult && secondResult && thirdResult && fourthResult;
+    
+    functionalityWorks("Copying MessageChain results in exact copy that is copied by value.", result);
+}
+copying_MessageChain_results_in_exact_copy();

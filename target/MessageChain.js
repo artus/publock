@@ -27,6 +27,9 @@ class MessageChain {
         this._messageList.push(message);
         this._messageMap.set(message.hash, message);
     }
+    containsMessageWithHash(hash) {
+        return typeof this.messageMap.get(hash) != 'undefined';
+    }
     addMessage(newMessage) {
         this.isValidMessage(newMessage);
         this._messageMap.set(newMessage.hash, newMessage);
@@ -118,6 +121,20 @@ class MessageChain {
         if (message.hash != message.generateHash())
             throw new Error("New Message hash field contains incorrect hash.");
         return true;
+    }
+    static copyMessageChain(otherMessageChain) {
+        let newMessageChain = new MessageChain();
+        for (let otherMessage of otherMessageChain.messageList) {
+            // Check if otherMessage isn't the genesis block
+            if (otherMessage.hash != newMessageChain.genesisHash) {
+                // Stringify message
+                let objectString = JSON.stringify(otherMessage);
+                let copiedMessage = JSON.parse(objectString);
+                let newMessage = new Message_1.Message(copiedMessage.pseudonym, copiedMessage.body, copiedMessage.date, copiedMessage.reference, copiedMessage.previousHash, copiedMessage.publicKey, copiedMessage.encryptedHash, copiedMessage.hash);
+                newMessageChain.addMessage(newMessage);
+            }
+        }
+        return newMessageChain;
     }
 }
 exports.MessageChain = MessageChain;
