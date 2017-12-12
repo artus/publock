@@ -23,6 +23,6 @@ let firstMessage = p1.addNewMessage("MyPseudonym", "This is a message.", "", fir
 let secondMessage = p1.addNewMessage("MyPseudonym", "This is also a message.", "", secondKey);
 
 // This message will be added because the supplied key is correct
-let thirdMessage = p2.addNewMessage("MyPseudonym", This is a third message.", "", firstKey);
+let thirdMessage = p2.addNewMessage("MyPseudonym", "This is a third message.", "", firstKey);
 ```
 
