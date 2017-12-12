@@ -14,7 +14,10 @@ class Publock {
     // Methods
     joinPublockNetworkFrom(publock) {
         this.connectToPublock(publock);
-        this.loadMessageChainFromPublock(publock);
+        this.firstConnection = publock;
+        if (typeof publock.firstConnection == 'undefined')
+            publock.firstConnection = this;
+        this.loadMessageChainFromPublock(this.firstConnection);
     }
     connectToPublock(publock) {
         if (!this.isConnectedToPublock(publock.id)) {
@@ -60,6 +63,13 @@ class Publock {
         return false;
     }
     validateMessage(message) {
+        try {
+            this.messageChain.validateMessageChain();
+        }
+        catch (error) {
+            // MessageChain is not valid, reload publock from first connection
+            this.loadMessageChainFromPublock(this.firstConnection);
+        }
         if (this.messageChain.lastMessage.equals(message))
             return true;
         try {
@@ -74,6 +84,7 @@ class Publock {
     }
     retrieveConsensusMapForMessage(message) {
         let consensusMap = new Map();
+        consensusMap.set(this.id, this.validateMessage(message));
         for (let connection of this.connections.values()) {
             consensusMap.set(connection.id, connection.validateMessage(message));
         }
@@ -81,7 +92,7 @@ class Publock {
     }
     reachConsensusForMessage(message) {
         let consensusCount = 0;
-        for (let isValid of this.retrieveConsensusMapForMessage(message)) {
+        for (let isValid of this.retrieveConsensusMapForMessage(message).values()) {
             if (isValid)
                 consensusCount++;
         }

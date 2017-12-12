@@ -15,6 +15,8 @@ export class Publock
     
     public connections : Map<string, Publock>;
     
+    private firstConnection : Publock;
+    
     public logging : boolean;
     
     constructor(logging : boolean = false, messageChain : MessageChain = new MessageChain())
@@ -30,7 +32,11 @@ export class Publock
     joinPublockNetworkFrom(publock : Publock)
     {
         this.connectToPublock(publock);
-        this.loadMessageChainFromPublock(publock);
+        this.firstConnection = publock;
+        
+        if (typeof publock.firstConnection == 'undefined') publock.firstConnection = this;
+        
+        this.loadMessageChainFromPublock(this.firstConnection);
     }
     
     connectToPublock(publock : Publock)
@@ -97,6 +103,16 @@ export class Publock
     
     validateMessage(message : Message) : boolean
     {
+        try
+        {
+            this.messageChain.validateMessageChain();
+        }
+        catch (error)
+        {
+            // MessageChain is not valid, reload publock from first connection
+            this.loadMessageChainFromPublock(this.firstConnection);
+        }
+        
         if (this.messageChain.lastMessage.equals(message)) return true;
         try {
             return this.messageChain.isValidMessage(message);
@@ -114,6 +130,8 @@ export class Publock
     {
         let consensusMap = new Map<string, boolean>();
         
+        consensusMap.set(this.id, this.validateMessage(message));
+        
         for (let connection of this.connections.values())
         {
             consensusMap.set(connection.id, connection.validateMessage(message));
@@ -126,7 +144,7 @@ export class Publock
     {
         let consensusCount = 0;
         
-        for (let isValid of this.retrieveConsensusMapForMessage(message))
+        for (let isValid of this.retrieveConsensusMapForMessage(message).values())
         {
             if (isValid) consensusCount++;
         }

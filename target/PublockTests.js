@@ -146,3 +146,43 @@ function adding_incorrect_message_to_networks_does_not_work() {
     functionalityWorks("Adding incorrect message to network does not work.", result);
 }
 adding_incorrect_message_to_networks_does_not_work();
+function using_pseudonym_with_incorrect_key_does_not_work() {
+    let p1 = new Publock_1.Publock();
+    let p2 = new Publock_1.Publock();
+    let p3 = new Publock_1.Publock();
+    p1.joinPublockNetworkFrom(p2);
+    p3.joinPublockNetworkFrom(p1);
+    let firstKey = new NodeRSA({ b: 512 });
+    let secondKey = new NodeRSA({ b: 512 });
+    let newMessage = p1.addNewMessage("test", "this is the right key", "", firstKey);
+    let correctMessageAdded = p1.messageChain.containsMessageWithHash(newMessage.hash);
+    correctMessageAdded = correctMessageAdded && p2.messageChain.containsMessageWithHash(newMessage.hash);
+    correctMessageAdded = correctMessageAdded && p3.messageChain.containsMessageWithHash(newMessage.hash);
+    let secondMessage = p2.addNewMessage("test", "this is the wrong key.", "", secondKey);
+    let incorrectMessageIsNotAdded = !p1.messageChain.containsMessageWithHash(secondMessage.hash);
+    incorrectMessageIsNotAdded = incorrectMessageIsNotAdded && !p2.messageChain.containsMessageWithHash(secondMessage.hash);
+    incorrectMessageIsNotAdded = incorrectMessageIsNotAdded && !p3.messageChain.containsMessageWithHash(secondMessage.hash);
+    let result = incorrectMessageIsNotAdded && correctMessageAdded;
+    functionalityWorks("Using pseudonym with incorrect key does not work.", result);
+}
+using_pseudonym_with_incorrect_key_does_not_work();
+function peers_with_invalid_MessageChain_reload() {
+    let p1 = new Publock_1.Publock();
+    let p2 = new Publock_1.Publock();
+    let p3 = new Publock_1.Publock();
+    p1.joinPublockNetworkFrom(p2);
+    p3.joinPublockNetworkFrom(p1);
+    let firstKey = new NodeRSA({ b: 512 });
+    let firstMessage = p1.addNewMessage("test", "this is correct", "", firstKey);
+    p2.messageChain.messageMap.get(firstMessage.hash).body = "this is edited";
+    let secondMessage = p2.addNewMessage("test", "this is also correct", "", firstKey);
+    let allContainFirstMessage = p1.messageChain.containsMessageWithHash(firstMessage.hash);
+    allContainFirstMessage = allContainFirstMessage && p2.messageChain.containsMessageWithHash(firstMessage.hash);
+    allContainFirstMessage = allContainFirstMessage && p3.messageChain.containsMessageWithHash(firstMessage.hash);
+    let allContainSecondMessage = p1.messageChain.containsMessageWithHash(secondMessage.hash);
+    allContainSecondMessage = allContainSecondMessage && p2.messageChain.containsMessageWithHash(secondMessage.hash);
+    allContainSecondMessage = allContainSecondMessage && p3.messageChain.containsMessageWithHash(secondMessage.hash);
+    let result = allContainFirstMessage && allContainSecondMessage;
+    functionalityWorks("Peers with invalid MessageChain reload their messagechains.", result);
+}
+peers_with_invalid_MessageChain_reload();
